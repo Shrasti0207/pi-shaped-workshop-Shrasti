@@ -1,4 +1,4 @@
-name: OWASP ZAP Scan - Day2
+name: OWASP ZAP Scan
 
 on:
   push:
