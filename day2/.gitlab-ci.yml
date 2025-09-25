@@ -1,0 +1,30 @@
+image: docker:stable
+
+services:
+  - docker:dind
+
+variables:
+  DOCKER_HOST: "tcp://docker:2375"
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+
+stages:
+  - zap_scan
+
+zap_scan:
+  stage: zap_scan
+  script:
+    - docker pull bkimminich/juice-shop:latest
+    - docker run -d --name juice -p 3000:3000 bkimminich/juice-shop:latest
+    - echo "Waiting for Juice Shop to be up at http://127.0.0.1:3000..."
+    - for i in $(seq 1 30); do curl -sSf http://127.0.0.1:3000 && break || sleep 2; done
+    - mkdir -p zap-output
+    - docker run --rm --link juice:juice -v $(pwd)/zap-output:/zap/wrk:rw ghcr.io/zaproxy/zaproxy:stable \
+        zap-full-scan.py -t http://juice:3000 -r /zap/wrk/zap-report.html -J /zap/wrk/zap-report.json
+    - ls -la zap-output
+  artifacts:
+    paths:
+      - zap-output/zap-report.html
+      - zap-output/zap-report.json
+    expire_in: 1 week
+  allow_failure: true
