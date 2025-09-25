@@ -44,7 +44,7 @@ jobs:
             -J /zap/wrk/zap-report.json
 
       - name: Upload ZAP Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: zap-report
           path: zap-output/
