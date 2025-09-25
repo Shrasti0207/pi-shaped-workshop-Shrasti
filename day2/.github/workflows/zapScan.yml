@@ -1,0 +1,50 @@
+name: OWASP ZAP Scan - Day2
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+    services:
+      juice:
+        image: bkimminich/juice-shop:latest
+        ports:
+          - 3000:3000
+        options: >-
+          --health-cmd="curl -sSf http://localhost:3000 || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Wait for Juice Shop
+        run: |
+          for i in {1..30}; do
+            curl -sSf http://localhost:3000 && break
+            echo "Waiting for Juice Shop..."
+            sleep 2
+          done
+
+      - name: Run OWASP ZAP full scan
+        run: |
+          mkdir -p zap-output
+          docker run --network host \
+            -v ${{ github.workspace }}/zap-output:/zap/wrk:rw \
+            ghcr.io/zaproxy/zaproxy:stable \
+            zap-full-scan.py \
+            -t http://localhost:3000 \
+            -r /zap/wrk/zap-report.html \
+            -J /zap/wrk/zap-report.json
+
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-report
+          path: zap-output/
