@@ -14,13 +14,21 @@ stages:
 zap_scan:
   stage: zap_scan
   script:
-    - docker pull bkimminich/juice-shop:latest
-    - docker run -d --name juice -p 3000:3000 bkimminich/juice-shop:latest
-    - echo "Waiting for Juice Shop to be up at http://127.0.0.1:3000..."
-    - for i in $(seq 1 30); do curl -sSf http://127.0.0.1:3000 && break || sleep 2; done
+    # Create a network so both containers can talk
+    - docker network create zapnet || true
+
+    # Start Juice Shop on the zapnet network
+    - docker run -d --name juice --network zapnet bkimminich/juice-shop:latest
+
+    # Wait until Juice Shop is up
+    - echo "Waiting for Juice Shop to start..."
+    - for i in $(seq 1 30); do curl -sSf http://docker:3000 || sleep 2; done || true
+
+    # Run ZAP against the container name 'juice' (port 3000)
     - mkdir -p zap-output
-    - docker run --rm --link juice:juice -v $(pwd)/zap-output:/zap/wrk:rw ghcr.io/zaproxy/zaproxy:stable \
+    - docker run --rm --network zapnet -v $(pwd)/zap-output:/zap/wrk:rw ghcr.io/zaproxy/zaproxy:stable \
         zap-full-scan.py -t http://juice:3000 -r /zap/wrk/zap-report.html -J /zap/wrk/zap-report.json
+
     - ls -la zap-output
   artifacts:
     paths:
