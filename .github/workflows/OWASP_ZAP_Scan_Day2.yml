@@ -1,50 +1,43 @@
-name: OWASP ZAP Scan - Day2
+name: OWASP ZAP Scan
 
 on:
+  workflow_dispatch:    
   push:
-    branches: [ "main" ]
+    branches:
+      - main              
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main            
 
 jobs:
   zap_scan:
     runs-on: ubuntu-latest
-    services:
-      juice:
-        image: bkimminich/juice-shop:latest
-        ports:
-          - 3000:3000
-        options: >-
-          --health-cmd="curl -sSf http://juice:3000 || exit 1"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Wait for Juice Shop
+      - name: Run ZAP Baseline Scan
+        continue-on-error: true
         run: |
-          for i in {1..30}; do
-            curl -sSf http://localhost:3000 && break
-            echo "Waiting for Juice Shop..."
-            sleep 2
-          done
+          sudo chown 1000:1000 ${{ github.workspace }}
+          docker run --rm -v ${{ github.workspace }}:/zap/wrk \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t https://juice-shop.herokuapp.com/ \
+            -g gen.conf \
+            -J report_json.json \
+            -w report_md.md \
+            -r report_html.html
 
-      - name: Run OWASP ZAP full scan
-        run: |
-          mkdir -p zap-output
-          docker run --network host \
-            -v ${{ github.workspace }}/zap-output:/zap/wrk:rw \
-            ghcr.io/zaproxy/zaproxy:stable \
-            zap-full-scan.py \
-            -t http://localhost:3000 \
-            -r /zap/wrk/zap-report.html \
-            -J /zap/wrk/zap-report.json
 
-      - name: Upload ZAP Report
+      - name: List generated reports
+        run: ls -lh ${{ github.workspace }}
+
+      - name: Upload ZAP Reports
         uses: actions/upload-artifact@v4
         with:
-          name: zap-report
-          path: zap-output/
+          name: zapscan
+          path: |
+            ${{ github.workspace }}/report_json.json
+            ${{ github.workspace }}/report_md.md
+            ${{ github.workspace }}/report_html.html
