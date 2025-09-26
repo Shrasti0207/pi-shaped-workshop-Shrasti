@@ -1,7 +1,7 @@
 # Day 2 — OWASP ZAP: Detecting & Understanding Web Vulnerabilities
 
 ## Objective
-Run a DAST scan (OWASP ZAP) against a vulnerable web app, find vulnerabilities, and propose fixes.
+The goal of this task is to integrate OWASP ZAP with a sample vulnerable application (OWASP Juice Shop) using GitHub Actions. The pipeline runs automatically on code push, generates a zap-report.html as an artifact, and helps identify security vulnerabilities for analysis and fixes.
 
 ## 1. Pull & run the target app (Juice Shop) locally
 ```bash
@@ -13,7 +13,7 @@ docker run -d --name juice -p 3000:3000 bkimminich/juice-shop:latest
 
 # verify it is up (open in browser)
 # http://localhost:3000
-curl -sSf http://localhost:3000 || echo "Juice Shop not reachable yet"
+curl -sSf http://localhost:3000
 ```
 
 ---
@@ -121,10 +121,3 @@ Access-Control-Allow-Credentials: true   # only if truly needed
 -   Running automated ZAP scans in CI/CD ensures vulnerabilities are caught before production release.
 -   Developers get fast feedback on security issues as part of build/test stages.
 -   Reduces cost of fixing vulnerabilities by detecting them early.
-
-## Artifacts / Screenshots
-- `zap-report.html` (attached as job artifact)
-- Screenshots:
-  - Before: Gitleaks scan showing leaks (if applicable)
-  - After: Gitleaks 0 leaks
-  - Running app (Docker container)
