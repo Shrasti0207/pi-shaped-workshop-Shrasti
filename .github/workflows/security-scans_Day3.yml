@@ -72,7 +72,7 @@ jobs:
       - name: Install app deps
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r day3/requirements.txt
 
       - name: Start Flask app (background)
         run: |
