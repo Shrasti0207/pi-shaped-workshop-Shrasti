@@ -18,7 +18,7 @@ To integrate Bandit, Semgrep, Gitleaks, and OWASP ZAP into a GitHub Actions pipe
   * **Bandit scan** → generates `bandit-report.html`.
   * **Semgrep scan** → generates `semgrep-report.json`.
   * **Gitleaks scan** → detects hardcoded secrets.
-  * **OWASP ZAP scan (DAST)** → runs against the Flask app on `http://localhost:5000` and generates `zap-report.html`.
+  * **OWASP ZAP scan (DAST)** → runs against the Flask app on `http://localhost:5000` and generates `report.html`.
 * All reports are saved as CI/CD artifacts for review.
 
 ---
@@ -27,6 +27,7 @@ To integrate Bandit, Semgrep, Gitleaks, and OWASP ZAP into a GitHub Actions pipe
 
 * **Bandit Report:** ![bandir report Summary](Screenshots/BanditScanningImage.png)
 * **Semgrep Report:** ![Semgrep report Summary](Screenshots/SemgrepScanning.png)
+* **ZAP Report:** ![ZAP report Summary](Screenshots/ZapScanning.png)
 
 ---
 
@@ -35,7 +36,7 @@ To integrate Bandit, Semgrep, Gitleaks, and OWASP ZAP into a GitHub Actions pipe
 ### 1. Hardcoded Secret Key
 
 * **Impact:**
-  A hardcoded secret (`SECRET_KEY`) was found in `appVulnerable.py`. This can lead to **session hijacking** and other security issues if attackers gain access to the codebase, because the key is static and predictable.
+  A hardcoded secret (`SECRET_KEY`) was found in `app.py`. This can lead to **session hijacking** and other security issues if attackers gain access to the codebase, because the key is static and predictable.
 * **Recommended Fix:**
   Remove hardcoded values from code. Instead, load secrets from **environment variables** or a **secrets manager**.
 
@@ -49,7 +50,7 @@ To integrate Bandit, Semgrep, Gitleaks, and OWASP ZAP into a GitHub Actions pipe
 ### 2. Use of `eval()`
 
 * **Impact:**
-  The application uses Python’s `eval()` on user input in `appVulnerable.py`. This is highly dangerous because an attacker can execute **arbitrary Python code**, potentially leading to **remote code execution (RCE)**.
+  The application uses Python’s `eval()` on user input in `app.py`. This is highly dangerous because an attacker can execute **arbitrary Python code**, potentially leading to **remote code execution (RCE)**.
 * **Recommended Fix:**
   Avoid `eval()`. If you only need to safely evaluate literals (e.g., numbers, lists, dicts), use `ast.literal_eval()`.
 
@@ -64,18 +65,6 @@ To integrate Bandit, Semgrep, Gitleaks, and OWASP ZAP into a GitHub Actions pipe
 
 ---
 
-## Evidence of Fixing One Issue
-
-* **Before:** `app.config['SECRET_KEY'] = 'hardcoded_secret_12345'` flagged by Bandit and Gitleaks.
-* **After Fix:**
-
-  ```python
-  import os
-  app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-default-secret')
-  ```
-* **Result:** Re-running Bandit, Semgrep, and Gitleaks locally and in CI/CD showed the hardcoded secret issue was no longer flagged.
-
----
 
 ## Core Concept Questions
 
