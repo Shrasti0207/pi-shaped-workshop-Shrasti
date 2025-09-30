@@ -101,7 +101,7 @@ jobs:
           nohup python appVulnerable.py > app.log 2>&1 &
           echo "Waiting for app to start..."
           sleep 15
-          curl --fail http://localhost:5000
+          curl --fail http://localhost:5001
         working-directory: day3
         shell: bash
 
@@ -120,7 +120,7 @@ jobs:
             --add-host=host.docker.internal:host-gateway \
             -v ${{ github.workspace }}:/zap/wrk \
             ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-            -t http://host.docker.internal:5000/ \
+            -t http://host.docker.internal:5001/ \
             -g gen.conf \
             -J report_json.json \
             -w report_md.md \
