@@ -95,7 +95,7 @@ jobs:
         run: |
           echo "--- App failed to start. Displaying logs from app.log: ---"
           cat app.log
-        working-directory: Security_Compliance_workshop-aman/day3
+        working-directory: day3
 
       - name: Run ZAP Baseline Scan via Docker
         continue-on-error: true
