@@ -45,14 +45,19 @@ jobs:
 
       - name: Run Semgrep (Default Behavior)
         id: semgrep
-        uses: returntocorp/semgrep-action@v1
+        run: |
+          pip install semgrep
+          semgrep --config=auto --json --output=reports/semgrep-report.json || true
+        working-directory: day3
+        shell: bash
+        # uses: returntocorp/semgrep-action@v1
         continue-on-error: true
 
       - name: Upload Semgrep SARIF Report
         uses: actions/upload-artifact@v4
         with:
-          name: semgrep-sarif-report
-          path: semgrep.sarif
+          name: semgrep-json-report
+          path: day3/semgrep-report.json
 
   secrets_scan:
     runs-on: ubuntu-latest
