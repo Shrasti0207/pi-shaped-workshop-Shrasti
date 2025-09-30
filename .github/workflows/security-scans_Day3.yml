@@ -1,122 +1,133 @@
-name: CI - Secure Scans
-
+name: Secure Code Scan
 
 on:
   push:
     branches:
       - main
+      - master
   pull_request:
     branches:
       - main
-
+      - master
 
 jobs:
-  static-scans:
+  sast_scans:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.x'
 
-
-      - name: Install scanning tools
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install bandit semgrep
+          pip install -r requirements.txt
+        working-directory: day3
 
-
-      - name: Run Bandit (HTML)
+      - name: Run Bandit (Python SAST)
+        id: bandit
         run: |
-          mkdir -p reports
-          bandit -r . -f html -o reports/bandit-report.html || true
+          pip install bandit
+          bandit -r . -f html -o bandit-report.html || true
+        working-directory: day3
+        shell: bash
+        continue-on-error: true
 
-
-      - name: Run Semgrep (JSON)
-        run: |
-          mkdir -p reports
-          semgrep --config=auto --json --output=reports/semgrep-report.json || true
-
-
-      - name: Upload static-scan reports
+      - name: Upload Bandit Report
         uses: actions/upload-artifact@v4
         with:
-          name: static-scan-reports
-          path: reports/
+          name: bandit-report
+          path: day3/bandit-report.html
 
+      - name: Run Semgrep (Default Behavior)
+        id: semgrep
+        uses: returntocorp/semgrep-action@v1
+        continue-on-error: true
 
-  gitleaks-scan:
+      - name: Upload Semgrep SARIF Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-sarif-report
+          path: semgrep.sarif
+
+  secrets_scan:
     runs-on: ubuntu-latest
-    needs: static-scans
     steps:
-      - name: Checkout (full history)
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: true
+      - name: Run Gitleaks Directly
+        run: |
+          wget https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz
+          tar -xzf gitleaks_8.18.2_linux_x64.tar.gz
+          ./gitleaks detect --source="." --config=".github/gitleaks.toml" --report-path="gitleaks-report.json" --redact || true
         continue-on-error: true
-
 
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
-          path: gitleaks-report.html
+          path: gitleaks-report.json
 
-
-  zaproxy-scan:
+  dast_scan:
     runs-on: ubuntu-latest
-    needs: [static-scans, gitleaks-scan]
+    needs: [sast_scans, secrets_scan]
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.x'
 
-
-      - name: Install app deps
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r day3/requirements.txt
+          pip install -r requirements.txt
+        working-directory: day3
 
-
-      - name: Start Flask app (background)
+      - name: Start Flask App
         run: |
-          nohup python appVulnerable.py > flask.log 2>&1 &
-          for i in {1..15}; do curl -sS http://localhost:5000 && break || sleep 1; done
+          nohup python app.py > app.log 2>&1 &
+          echo "Waiting for app to start..."
+          sleep 15
+          curl --fail http://localhost:5000
+        working-directory: day3
+        shell: bash
 
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          echo "--- App failed to start. Displaying logs from app.log: ---"
+          cat app.log
+        working-directory: day3
 
-      - name: ZAP Full Scan
-        uses: zaproxy/action-full-scan@v0.12.0
-        with:
-          target: 'http://host.docker.internal:5000'
-          fail_action: 'false'
-          artifact_name: 'zap-report'
+      - name: Run ZAP Baseline Scan via Docker
+        continue-on-error: true
+        run: |
+          sudo chown 1000:1000 ${{ github.workspace }}
+          docker run --rm \
+            --add-host=host.docker.internal:host-gateway \
+            -v ${{ github.workspace }}:/zap/wrk \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t http://host.docker.internal:5000/ \
+            -g gen.conf \
+            -J report_json.json \
+            -w report_md.md \
+            -r report_html.html
 
-
-      - name: List generated reports
-        run: ls -lh ${{ github.workspace }}
-
-
-      - name: Upload ZAP Reports
+      - name: Upload ZAP DAST Reports
         uses: actions/upload-artifact@v4
         with:
-          name: zapscan
+          name: zap-dast-reports
           path: |
-            ${{ github.workspace }}/report_json.json
-            ${{ github.workspace }}/report_md.md
-            ${{ github.workspace }}/report_html.html
+            report_json.json
+            report_md.md
+            report_html.html
