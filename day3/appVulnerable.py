@@ -4,29 +4,24 @@ import os
 
 app = Flask(__name__)
 
-
-# INTENTIONAL: hardcoded secret for the exercise
-app.config['SECRET_KEY'] = 'hardcoded_secret_12345'
+app.config['SECRET_KEY'] = '0ff7d16e80eea2593e0c64b661df7cd123456789'
 
 
 @app.route('/')
 def index():
     user = request.args.get('name', '')
-    # INTENTIONAL: unsafe rendering (reflective XSS)
     return render_template_string(f"<h1>Hello, My name is Shrasti{user}</h1>")
 
 
 @app.route('/eval')
 def insecure_eval():
     cmd = request.args.get('cmd', '')
-    # INTENTIONAL: dangerous use of eval()
     result = eval(cmd)
     return jsonify({'result': str(result)})
 
 
 @app.route('/secret')
 def get_secret():
-    # returns the hardcoded secret (to be detected by gitleaks)
     return jsonify({'secret': app.config['SECRET_KEY']})
 
 
