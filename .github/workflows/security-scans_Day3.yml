@@ -57,6 +57,12 @@ jobs:
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: true
         continue-on-error: true
 
+      - name: Upload Gitleaks Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
+
   zaproxy-scan:
     runs-on: ubuntu-latest
     needs: [static-scans, gitleaks-scan]
@@ -85,3 +91,9 @@ jobs:
           target: 'http://host.docker.internal:5000'
           fail_action: 'false'
           artifact_name: 'zap-report'
+
+      - name: Save ZAP Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-report
+          path: zap-report.html
