@@ -92,8 +92,14 @@ jobs:
           fail_action: 'false'
           artifact_name: 'zap-report'
 
-      - name: Save ZAP Report
+      - name: List generated reports
+        run: ls -lh ${{ github.workspace }}
+
+      - name: Upload ZAP Reports
         uses: actions/upload-artifact@v4
         with:
-          name: zap-report
-          path: zap-report.html
+          name: zapscan
+          path: |
+            ${{ github.workspace }}/report_json.json
+            ${{ github.workspace }}/report_md.md
+            ${{ github.workspace }}/report_html.html
