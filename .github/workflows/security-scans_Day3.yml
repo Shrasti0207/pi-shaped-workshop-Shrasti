@@ -83,12 +83,12 @@ jobs:
       - name: Start Flask app (background)
         run: |
           nohup python app.py > flask.log 2>&1 &
-          for i in {1..15}; do curl -sS http://localhost:5000 && break || sleep 1; done
+          for i in {1..15}; do curl -sS http://localhost:5001 && break || sleep 1; done
 
       - name: ZAP Full Scan
         uses: zaproxy/action-full-scan@v0.12.0
         with:
-          target: 'http://localhost:5000'
+          target: 'http://localhost:5001'
           fail_action: 'false'
           artifact_name: 'zap-report'
 
