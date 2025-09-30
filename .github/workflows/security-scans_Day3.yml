@@ -98,7 +98,7 @@ jobs:
 
       - name: Start Flask App
         run: |
-          nohup python day3/appVulnerable.py > app.log 2>&1 &
+          nohup python appVulnerable.py > app.log 2>&1 &
           echo "Waiting for app to start..."
           sleep 15
           curl --fail http://localhost:5000
