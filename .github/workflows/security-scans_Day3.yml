@@ -35,6 +35,11 @@ jobs:
           mkdir -p reports
           semgrep --config=auto --json --output=reports/semgrep-report.json || true
 
+      - name: Convert Semgrep JSON report to HTML
+        run: |
+          pip install prospector2html
+          prospector2html --input=reports/semgrep-report.json --output=reports/semgrep-report.html
+
       - name: Upload static-scan reports
         uses: actions/upload-artifact@v4
         with:
@@ -61,7 +66,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
-          path: gitleaks-report.json
+          path: gitleaks-report.html
 
   zaproxy-scan:
     runs-on: ubuntu-latest
