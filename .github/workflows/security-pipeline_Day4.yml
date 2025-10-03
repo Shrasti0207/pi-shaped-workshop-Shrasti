@@ -104,10 +104,14 @@ jobs:
         run: |
           nohup python appVulnerable.py > app.log 2>&1 &
           echo "Waiting for app to start..."
-          sleep 15
-          curl --fail http://localhost:5000
+          for i in {1..10}; do
+            curl --fail http://localhost:5000 && break
+            echo "Waiting for Flask..."
+            sleep 3
+          done
         working-directory: day4
         shell: bash
+
 
       - name: Show logs on failure
         if: failure()
