@@ -94,49 +94,47 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install dependencies (verbose)
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          echo "---- pip freeze ----"
-          pip freeze
-          echo "---- pip show flask ----"
-          pip show flask || true
-        working-directory: day4
-        shell: bash
+        working-directory: Security_Compliance_workshop-aman/day3
 
-      - name: Start Flask App (debug-friendly)
+      - name: Start Flask App
         run: |
-          set -x
-          echo "Starting app in background (unbuffered output)..."
-          # start unbuffered so logs show up immediately
-          python -u app.py > app.log 2>&1 &
-          echo $! > flask_pid.txt
-          sleep 1
-          echo "Process list (python related):"
-          ps -ef | grep python || true
-          echo "Check listening ports for 5000:"
-          ss -lntp | grep :5000 || true
-          echo "Waiting for app to be reachable (max 60s)..."
-          for i in {1..20}; do
-            if curl --fail --max-time 3 http://localhost:5000/; then
-              echo "Flask is up!"
-              break
-            fi
-            echo "Waiting (${i})..."
-            sleep 3
-          done
-          echo "---- tail app.log (last 200 lines) ----"
-          tail -n 200 app.log || true
-        working-directory: day4
+          nohup python app.py > app.log 2>&1 &
+          echo "Waiting for app to start..."
+          sleep 15
+          curl --fail http://localhost:5000
+        working-directory: Security_Compliance_workshop-aman/day3
         shell: bash
-        continue-on-error: true
 
-      - name: Upload debugging artifacts (app log + pid)
-        if: always()
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          echo "--- App failed to start. Displaying logs from app.log: ---"
+          cat app.log
+        working-directory: Security_Compliance_workshop-aman/day3
+
+      - name: Run ZAP Baseline Scan via Docker
+        continue-on-error: true
+        run: |
+          sudo chown 1000:1000 ${{ github.workspace }}
+          docker run --rm \
+            --add-host=host.docker.internal:host-gateway \
+            -v ${{ github.workspace }}:/zap/wrk \
+            ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+            -t http://host.docker.internal:5000/ \
+            -g gen.conf \
+            -J report_json.json \
+            -w report_md.md \
+            -r report_html.html
+
+      - name: Upload ZAP DAST Reports
         uses: actions/upload-artifact@v4
         with:
-          name: flask-debug-artifacts
+          name: zap-dast-reports
           path: |
-            day4/app.log
-            day4/flask_pid.txt
+            report_json.json
+            report_md.md
+            report_html.html
