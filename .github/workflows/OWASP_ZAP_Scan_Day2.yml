@@ -4,7 +4,9 @@ on:
   workflow_dispatch:    
   push:
     branches:
-      - main              
+      - main
+    paths:
+      - 'day2/**'              
   pull_request:
     branches:
       - main            

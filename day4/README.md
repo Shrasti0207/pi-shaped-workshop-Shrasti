@@ -69,6 +69,48 @@ sudo docker run --rm --network host \
     -r zap-report.html
 ```
 
+## GitHub Actions CI/CD Integration
+
+* A workflow `.github/workflows/security-pipeline_Day4.yml` was created to run on every push to the `main` branch.
+* Stages:
+
+  * **Bandit scan** → generates `bandit-report.html`.
+  * **Semgrep scan** → generates `semgrep-report.json`.
+  * **trivy scan** → vulnerable dependencies
+  * **OWASP ZAP scan (DAST)** → runs against the Flask app on `http://localhost:5000` and generates `zap-report.html`.
+* All reports are saved as CI/CD artifacts for review.
+
+---
+
+## Screenshots / Artifacts
+
+* **Bandit Report:** ![bandir report Summary](Screenshots/BanditScanningImage.png)
+* **Semgrep Report:** ![Semgrep report Summary](Screenshots/SemgrepScanning.png)
+* **trivy Report:** ![Trivy REport Summary] (Screenshots/TrivyScanning.png)
+* **ZAP Report:** ![ZAP report Summary](Screenshots/ZapScanning.png)
+
+---
+
+## Vulnerabilities Found
+
+### 1. Vulnerable dependency
+
+* **Impact:**
+     Known exploits may compromise the app or server
+* **Recommended Fix:**
+    Upgrade to latest patched version, e.g., requests>=2.31.0
+
+---
+
+### 2. Use of `eval()`
+
+* **Impact:**
+  Remote code execution possible
+* **Recommended Fix:**
+  Avoid eval; use safe parsing or validation
+
+---
+
 ## Core Concept Questions
 
 ### 1. Pipeline Integration
