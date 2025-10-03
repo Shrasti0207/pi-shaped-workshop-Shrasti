@@ -66,17 +66,6 @@ jobs:
         with:
           fetch-depth: 0
 
-    #   - name: Set up Python
-    #     uses: actions/setup-python@v5
-    #     with:
-    #       python-version: '3.x'
-
-    #   - name: Install dependencies
-    #     run: |
-    #       python -m pip install --upgrade pip
-    #       pip install -r requirements.txt
-    #     working-directory: day4
-
       - name: Run Trivy File System Scan
         uses: aquasecurity/trivy-action@0.28.0
         with:
@@ -113,7 +102,7 @@ jobs:
 
       - name: Start Flask App
         run: |
-          nohup python app.py > app.log 2>&1 &
+          nohup python appVulnerable.py > app.log 2>&1 &
           echo "Waiting for app to start..."
           sleep 15
           curl --fail http://localhost:5000
