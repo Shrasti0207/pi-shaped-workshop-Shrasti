@@ -67,7 +67,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Trivy File System Scan
-        uses: aquasecurity/trivy-action@v0.67.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
             scan-type: fs       # file system scan (repo code)
             format: html        # generate HTML report
