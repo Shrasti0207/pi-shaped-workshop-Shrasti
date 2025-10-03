@@ -5,10 +5,14 @@ on:
     branches:
       - main
       - master
+    paths:
+      - 'day4/**'              
   pull_request:
     branches:
-      - main
-      - master
+      - main 
+      - master 
+    paths:
+      - 'day4/**'
 
 jobs:
   sast_scans:
