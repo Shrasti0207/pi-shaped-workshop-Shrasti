@@ -4,15 +4,11 @@ on:
   push:
     branches:
       - main
-      - master
-    paths:
-      - 'day4/**'              
+      - master            
   pull_request:
     branches:
       - main 
-      - master 
-    paths:
-      - 'day4/**'
+      - master
 
 jobs:
   sast_scans:
@@ -107,6 +103,7 @@ jobs:
       - name: Start Flask App
         run: |
           nohup python app.py > app.log 2>&1 &
+          echo $! > flask_pid.txt
           echo "Waiting for app to start..."
           for i in {1..10}; do
             curl --fail http://localhost:5000 && break
