@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 ###  Run Flask App
 ```bash
-python appVulnerable.py
+python app.py
 ```
 **Runnable Application:** ![Runnable application](Screenshots/ApplicationImage.png)
 
@@ -86,7 +86,7 @@ sudo docker run --rm --network host \
 
 * **Bandit Report:** ![bandir report Summary](Screenshots/BanditScanningImage.png)
 * **Semgrep Report:** ![Semgrep report Summary](Screenshots/SemgrepScanning.png)
-* **trivy Report:** ![Trivy REport Summary] (Screenshots/TrivyScanning.png)
+* **trivy Report:** ![Trivy Report Summary](Screenshots/TrivyScanning.png)
 * **ZAP Report:** ![ZAP report Summary](Screenshots/ZapScanning.png)
 
 ---
