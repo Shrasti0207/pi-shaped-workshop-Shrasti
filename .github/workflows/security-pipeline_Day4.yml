@@ -67,7 +67,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Trivy File System Scan
-        uses: aquasecurity/trivy-action@v0.37.4
+        uses: aquasecurity/trivy-action@v0.67.0
         with:
             scan-type: fs       # file system scan (repo code)
             format: html        # generate HTML report
@@ -80,7 +80,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: trivy-report
-          path: trivy-report.json
+          path: day4/trivy-report.json
 
   dast_scan:
     runs-on: ubuntu-latest
